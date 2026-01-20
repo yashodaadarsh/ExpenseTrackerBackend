@@ -1,0 +1,128 @@
+version: '3'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.4
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - arpanet
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.4
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+      # Listeners (internal + external)
+      KAFKA_LISTENERS: INTERNAL://:29092,EXTERNAL://:9092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:29092,EXTERNAL://0.0.0.0:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+
+      # Replication factor fixes for single-node Kafka
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    networks:
+      - arpanet
+
+  mysql:
+    image: mysql:8.3.0
+    container_name: mysql-8.3.0
+    restart: always
+    environment:
+      MYSQL_USER: test
+      MYSQL_ROOT_USER: root
+      MYSQL_PASSWORD: "password"
+      MYSQL_ROOT_PASSWORD: "password"
+    ports:
+      - "3306:3306"
+    expose:
+      - "3306"
+    volumes:
+      - mysql-db:/var/lib/mysql
+    networks:
+      - arpanet
+
+  userservice:
+    image: userservice
+    container_name: user-service
+    ports:
+      - '9810:9810'
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DB: userservice
+    depends_on:
+      - kafka
+      - mysql
+      - authservice
+    networks:
+      - arpanet
+
+  expenseservice:
+    image: expenseservice
+    container_name: expense-service
+    ports:
+      - '9820:9820'
+    environment:
+      KAFKA_HOST: kafka
+      KAFKA_PORT: 9092
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DB: expenseservice
+    depends_on:
+      - kafka
+      - mysql
+    networks:
+      - arpanet
+
+  authservice:
+    image: authservice
+    container_name: auth-service
+    ports:
+      - '9898:9898'
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DB: authservice
+      KAFKA_HOST: kafka
+      KAFKA_PORT: 9092
+    depends_on:
+      - kafka
+      - mysql
+    networks:
+      - arpanet
+
+  dsservice:
+    image: dsservice
+    container_name: ds-service
+    ports:
+      - '8010:8010'
+    environment:
+      KAFKA_HOST: kafka
+      KAFKA_PORT: 9092
+      GOOGLE_API_KEY: AIzaSyB2pmh8aqIbbgaaHzFOcw25KKYpd2eg6JM
+    depends_on:
+      - kafka
+      - mysql
+      - userservice
+      - expenseservice
+
+volumes:
+  mysql-db:
+    driver: local
+
+networks:
+  arpanet:
+    driver: bridge
