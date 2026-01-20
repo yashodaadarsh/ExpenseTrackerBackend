@@ -1,7 +1,12 @@
 
----
 
 # Expense Tracker Backend – Microservices Architecture
+
+![Java](https://img.shields.io/badge/Java-Spring%20Boot-orange?style=flat-square&logo=java)
+![Python](https://img.shields.io/badge/Python-Data%20Science-blue?style=flat-square&logo=python)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker)
+![Kafka](https://img.shields.io/badge/Kafka-Event%20Streaming-black?style=flat-square&logo=apachekafka)
+![Kong](https://img.shields.io/badge/Kong-API%20Gateway-green?style=flat-square&logo=kong)
 
 **ExpenseTrackerBackend** is a backend system designed to support a modern expense tracking application using a **microservices architecture**.
 This project demonstrates real-world backend development skills including **distributed services, API routing, messaging systems, containerization, and database management**.
@@ -33,43 +38,6 @@ An **API Gateway** acts as a centralized entry point for client requests masking
 
 ---
 
-##  Project Components
-
-This project includes the following key components (microservices):
-
-| Component                | Description                                             |
-| ------------------------ | ------------------------------------------------------- |
-| **AuthService**          | Handles user authentication and authorization           |
-| **UserService**          | Manages user account data                               |
-| **ExpenseService**       | Records and returns expense entries                     |
-| **DSService**            | Coordinates data workflows (e.g., events)               |
-| **Docker Configuration** | Builds images and enables orchestration                 |
-| **Docker Compose**       | Connects services and dependencies (Kafka, MySQL, Kong) |
-
----
-
-##  Integrated Technologies
-
-This project uses the following major technologies:
-
-###  Docker & Docker Compose
-
-Used to containerize services and deploy them together with supporting infrastructure such as databases and messaging systems.
-
-###  Kafka
-
-Asynchronous message broker used to exchange event data between services.
-
-###  MySQL
-
-Relational database used for persistent storage of application data.
-
-###  Kong (API Gateway)
-
-Acts as the **single entry point** for API requests and routes them to the appropriate backend service. Kong also provides additional capabilities such as authentication, rate limiting, and monitoring. ([Kong Inc.][1])
-
----
-
 ##  High-Level Architecture Diagram
 
 ```
@@ -89,6 +57,26 @@ Auth Service  User Service  Expense Service
 ```
 
 ---
+
+
+### **Core Microservices**
+| Service Name | Tech Stack | Responsibility |
+| :--- | :--- | :--- |
+| **Auth Service** | Java (Spring Boot) | Handles JWT authentication, authorization, and security protocols. |
+| **User Service** | Java (Spring Boot) | Manages user account details. |
+| **Data Science Service** | Python | Process the message received from the mobile. |
+
+---
+
+### **Infrastructure Components**
+* **Kong API Gateway:** Centralizes traffic, handles rate limiting, and routes requests to appropriate microservices.
+* **Apache Kafka:** Acts as the event backbone, enabling real-time data streaming between the User/Expense services and the Data Science engine.
+* **MySQL:** Persistent relational storage for transactional data.
+* **Docker Compose:** unified deployment configuration for spinning up the entire stack with a single command.
+
+
+---
+
 
 ##  How It Works (Summary)
 
@@ -110,13 +98,18 @@ git clone https://github.com/yashodaadarsh/ExpenseTrackerBackend.git
 cd ExpenseTrackerBackend
 ```
 
-### 2. Start Services
+### 2. Create and Start Services
 
 Run this from the root directory:
 
+**1.** Create the jar file of each microservice and build the image with the name specified in expense_tracker_services.yml.
+
+**2.** Go to the Docker folder and run the docker compose file of kong.yml and expense_tracker_services.yml by using the command.
 ```bash
-docker compose up --build
-```
+    docker compose -f kong.yml up -d
+    docker compose -f expense_tracker_services.yml
+
+``` 
 
 This will start all services, including:
 

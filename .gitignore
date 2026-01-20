@@ -7,6 +7,7 @@ IgnoreToGitHub/
 **/dist/
 **/denv/
 **/env_ex/
+**/.env/
 **/__pycache__/
 **/*.pyc
 
